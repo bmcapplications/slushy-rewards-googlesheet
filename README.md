@@ -1,6 +1,8 @@
 # slushy-rewards-googlesheet
 Pulls BTC rewards from Slush Pool's API and stores them in Google Sheets
 
+![Slushy Screenshot](https://user-images.githubusercontent.com/8978271/150710591-f077d60c-7182-4d98-a2f0-e060a9d32277.png)
+
 Setup Steps
 1. Log into your Slush Pool account and create a "Limited read-only" API token
 2. Go to https://docs.google.com/spreadsheets/d/1Tq8IWa01LJK_ErTwDrEAPDTutyRAhIZ5XY2ORTbLRhw/edit?usp=sharing
