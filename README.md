@@ -14,7 +14,7 @@ Setup Steps:
 1. Log into your Slush Pool account and create a "Limited read-only" API token
 2. Go to https://docs.google.com/spreadsheets/d/1Tq8IWa01LJK_ErTwDrEAPDTutyRAhIZ5XY2ORTbLRhw/edit?usp=sharing
 3. Select File > Make a Copy and then rename it
-4. Copy the your Slush API token and paste it into the B1 cell in the Control Panel tab
+4. Go to the Control Panel tab in your spreadsheet and paste your Slush API token into the B1 cell
 5. In the spreadsheet menu select Extensions > Apps Script
 6. Replace the code in the Apps Script editor with the content of https://github.com/bmcapplications/slushy-rewards-googlesheet/blob/main/Code.gs
 7. Review the inserted code in Apps Script and then press the Save Project icon. Rename the untitled project if you like. You can now close this window
