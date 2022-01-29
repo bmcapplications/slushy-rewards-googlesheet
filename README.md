@@ -1,5 +1,5 @@
 # Slushy
-Pulls BTC rewards from Slush Pool's API and stores them in Google Sheets
+Pulls BTC block rewards from Slush Pool's API and stores them in Google Sheets
 
 ![Slushy Screenshot](https://user-images.githubusercontent.com/8978271/150710591-f077d60c-7182-4d98-a2f0-e060a9d32277.png)
 
