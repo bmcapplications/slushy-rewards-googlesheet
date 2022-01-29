@@ -272,11 +272,13 @@ function triggerCheck() {
   if(triggerStatus == 'Off' && triggers.length > 0) {
     for (var i = 0; i < triggers.length; i++) {
      ScriptApp.deleteTrigger(triggers[i]);
+     controlSheet.getRange(2,2).setBackground(null);
     }
   } else if(triggerStatus == 'On' && triggers.length == 0) {
     ScriptApp.newTrigger("getBlockData")
       .timeBased()
       .everyHours(1)
       .create();
+    controlSheet.getRange(2,2).setBackground("#d9ead3");
   }
 }
