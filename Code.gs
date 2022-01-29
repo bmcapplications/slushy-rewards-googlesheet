@@ -263,4 +263,20 @@ function setRewardStats() {
   rewardSheet.getRange(3,12).setValue(prevMonthTotal);
   rewardSheet.getRange(5,12).setValue(allTimeTotal);
   rewardSheet.getRange(1,1).setValue("Last Updated: " + utcDate + " UTC");
+  triggerCheck();
+}
+
+function triggerCheck() {
+  var triggerStatus = controlSheet.getRange(2,2).getValue();
+  var triggers = ScriptApp.getScriptTriggers();
+  if(triggerStatus == 'Off' && triggers.length > 0) {
+    for (var i = 0; i < triggers.length; i++) {
+     ScriptApp.deleteTrigger(triggers[i]);
+    }
+  } else if(triggerStatus == 'On' && triggers.length == 0) {
+    ScriptApp.newTrigger("getBlockData")
+      .timeBased()
+      .everyHours(1)
+      .create();
+  }
 }
