@@ -21,6 +21,6 @@ Setup Steps:
 8. Return to Spreadsheet and refresh the page
 9. A few moments after the spreadsheet refreshes you should see a new menu at the top called Control Board. Select Control Board > Refresh Slush Data
 10. In the authorization prompt, select Continue. Then select your Google account, then select Advanced
-11. In the Google hasn't verified this app screen, select Advanced. then at the bottom select "Go to <app script project name> (unsafe)"
+11. In the Google hasn't verified this app screen, select Advanced. then at the bottom select "Go to your_script_project_name (unsafe)"
 12. In the next screen, review permissions and then select Allow
 13. After the permissions are accepted, once again select Control Board > Refresh Slush Data. You should now see the last 15 blocks get inserted into the Rewards tab
