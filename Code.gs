@@ -18,6 +18,7 @@ function menuItem1() {
 }
 
 function getBlockData() {
+  triggerCheck();
   var slushToken = controlSheet.getRange(1,2).getValue();
   var slushStatsURL = 'https://slushpool.com/stats/json/btc'; // request block data
   var response = UrlFetchApp.fetch( 
@@ -134,6 +135,11 @@ function refreshBlockState(blockJson, blockArray) {
         rewardSheet.getRange(unconfirmedRow, 7).setValue('confirmed');
         rewardSheet.getRange(unconfirmedRow, 8).setValue(0).setBackground(null);
       }
+    } else if (stateRangeValues[i] == "invalid" && rewardValues[i] > 0) {
+      var invalidRow = i + 8;
+      rewardSheet.getRange(invalidRow, 6).setValue(0.00000000);
+      rewardSheet.getRange(invalidRow, 9).setValue(0);
+      rewardSheet.getRange(invalidRow, 7).setBackground('#f4cccc');
     }
   }
 }
@@ -192,7 +198,7 @@ function setRewardStats() {
       var unconfirmedBlocks = unconfirmedBlocks + 1;
     }
   }
-  rewardSheet.getRange(3, 1).setValue(unconfirmedTotal);
+  rewardSheet.getRange(3, 1).setNumberFormat("0.00000000").setValue(unconfirmedTotal);
   rewardSheet.getRange(5, 1).setValue(" # Blocks: " + unconfirmedBlocks);
 
   var foundDates = rewardSheet.getRange(8, 2, lastRow - 7, 1).getValues();
@@ -251,19 +257,18 @@ function setRewardStats() {
     var allTimeRerward = rewardSheet.getRange(i + 8, 6).getValue();
     var allTimeTotal = allTimeTotal + allTimeRerward;
   }
-  rewardSheet.getRange(3,3).setValue(twtyFourHourTotal);
+  rewardSheet.getRange(3,3).setNumberFormat("0.00000000").setValue(twtyFourHourTotal);
   rewardSheet.getRange(5,3).setValue(" # Blocks: " + twtyFourHourBlocks);
-  rewardSheet.getRange(3,5).setValue(yesterdayTotal);
+  rewardSheet.getRange(3,5).setNumberFormat("0.00000000").setValue(yesterdayTotal);
   rewardSheet.getRange(5,5).setValue(" # Blocks: " + yesterdayBlocks);
-  rewardSheet.getRange(3,7).setValue(lastWeekTotal);
+  rewardSheet.getRange(3,7).setNumberFormat("0.00000000").setValue(lastWeekTotal);
   rewardSheet.getRange(5,7).setValue(" # Blocks: " + lastWeekBlocks);
-  rewardSheet.getRange(3,9).setValue(twoWeeksAgoTotal);
+  rewardSheet.getRange(3,9).setNumberFormat("0.00000000").setValue(twoWeeksAgoTotal);
   rewardSheet.getRange(5,9).setValue(" # Blocks: " + twoWeeksAgoBlocks);
-  rewardSheet.getRange(2,12).setValue(lastThirtyDayTotal);
-  rewardSheet.getRange(3,12).setValue(prevMonthTotal);
-  rewardSheet.getRange(5,12).setValue(allTimeTotal);
+  rewardSheet.getRange(2,12).setNumberFormat("0.00000000").setValue(lastThirtyDayTotal);
+  rewardSheet.getRange(3,12).setNumberFormat("0.00000000").setValue(prevMonthTotal);
+  rewardSheet.getRange(5,12).setNumberFormat("0.00000000").setValue(allTimeTotal);
   rewardSheet.getRange(1,1).setValue("Last Updated: " + utcDate + " UTC");
-  triggerCheck();
 }
 
 function triggerCheck() {
