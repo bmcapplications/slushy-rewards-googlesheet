@@ -2,8 +2,15 @@
  * @OnlyCurrentDoc
  */
 
+/**
+ * Google Sheet (Slushy v2):
+ * https://docs.google.com/spreadsheets/d/1NM6yX734cTQMVrJZvkawAmFVgwqafehTWLWU8BbIP-U/edit?usp=sharing
+ */
+
 var ss  = SpreadsheetApp.getActiveSpreadsheet();
 var rewardSheet = ss.getSheetByName('Rewards');
+var dailySheet = ss.getSheetByName("Daily");
+var monthlySheet = ss.getSheetByName("Monthly");
 var controlSheet = ss.getSheetByName('Control Panel');
 
 function onOpen() {
@@ -200,7 +207,7 @@ function setRewardStats() {
     }
   }
   rewardSheet.getRange(3, 1).setNumberFormat("0.00000000").setValue(unconfirmedTotal);
-  rewardSheet.getRange(5, 1).setValue(" # Blocks: " + unconfirmedBlocks);
+  rewardSheet.getRange(5, 1).setValue("# Blocks: " + unconfirmedBlocks);
 
   var foundDates = rewardSheet.getRange(8, 2, lastRow - 7, 1).getValues();
   var utcDate = Utilities.formatDate(new Date(), "GMT", "MM/dd/yyyy HH:mm:ss");
@@ -225,7 +232,7 @@ function setRewardStats() {
   var prevMonthTotal = 0;
   var allTimeTotal = 0;
   for (var i = 0; i < foundDates.length; i++) {
-    var dateValue = new Date(Utilities.formatDate(new Date(foundDates[i]), "GMT-08:00", "MM/dd/yyyy HH:mm:ss"));
+    var dateValue = new Date(Utilities.formatDate(new Date(foundDates[i]), "GMT", "MM/dd/yyyy HH:mm:ss"));
     if (dateValue > twtyFourHoursAgo) {
       var twtyFourHourReward = rewardSheet.getRange(i + 8, 6).getValue();
       var twtyFourHourTotal = twtyFourHourTotal + twtyFourHourReward;
@@ -259,17 +266,24 @@ function setRewardStats() {
     var allTimeTotal = allTimeTotal + allTimeRerward;
   }
   rewardSheet.getRange(3,3).setNumberFormat("0.00000000").setValue(twtyFourHourTotal);
-  rewardSheet.getRange(5,3).setValue(" # Blocks: " + twtyFourHourBlocks);
+  rewardSheet.getRange(5,3).setValue("# Blocks: " + twtyFourHourBlocks);
   rewardSheet.getRange(3,5).setNumberFormat("0.00000000").setValue(yesterdayTotal);
-  rewardSheet.getRange(5,5).setValue(" # Blocks: " + yesterdayBlocks);
+  rewardSheet.getRange(5,5).setValue("# Blocks: " + yesterdayBlocks);
   rewardSheet.getRange(3,7).setNumberFormat("0.00000000").setValue(lastWeekTotal);
-  rewardSheet.getRange(5,7).setValue(" # Blocks: " + lastWeekBlocks);
+  rewardSheet.getRange(5,7).setValue("# Blocks: " + lastWeekBlocks);
   rewardSheet.getRange(3,9).setNumberFormat("0.00000000").setValue(twoWeeksAgoTotal);
-  rewardSheet.getRange(5,9).setValue(" # Blocks: " + twoWeeksAgoBlocks);
+  rewardSheet.getRange(5,9).setValue("# Blocks: " + twoWeeksAgoBlocks);
   rewardSheet.getRange(2,12).setNumberFormat("0.00000000").setValue(lastThirtyDayTotal);
   rewardSheet.getRange(3,12).setNumberFormat("0.00000000").setValue(prevMonthTotal);
   rewardSheet.getRange(5,12).setNumberFormat("0.00000000").setValue(allTimeTotal);
   rewardSheet.getRange(1,1).setValue("Last Updated: " + utcDate + " UTC");
+  var getSheets = ss.getSheets();
+  var  s;
+  for(s in getSheets){
+    if (getSheets[s].getName() === 'Daily') {
+      popDailySheets()
+    }
+  }
 }
 
 function triggerCheck() {
@@ -286,5 +300,316 @@ function triggerCheck() {
       .everyHours(1)
       .create();
     controlSheet.getRange(2,2).setBackground("#d9ead3");
+  }
+}
+
+function popDailySheets() {
+  var lastDailyDateCell = dailySheet.getRange(20,1);
+  var lastMonthlyDateCell = monthlySheet.getRange(20,1);
+  var newDate = new Date();
+  var month = newDate.getMonth();
+  var year = newDate.getFullYear();
+  var daysInMonth = new Date(year, month + 1, 0).getDate();
+  var opEx = controlSheet.getRange(3,2).getValue();
+  var dailyOpEx = opEx / daysInMonth;
+  if (lastDailyDateCell.isBlank()) {
+    setNewDailyDates(dailyOpEx);
+  } else {
+    checkLastDate(dailyOpEx);
+  }
+  if (lastMonthlyDateCell.isBlank()) {
+    setNewMonthlyDates()
+  } else {
+    checkLastDate(dailyOpEx)
+  }
+}
+
+function checkLastDate(dailyOpEx) {
+  var lastDailyDate = Utilities.formatDate(new Date(dailySheet.getRange(20,1).getValue()), "GMT", "MM/dd/yyyy");
+  var lastMonthlyDate = Utilities.formatDate(new Date(dailySheet.getRange(20,1).getValue()), "GMT", "yyyy-MM");
+  var today = Utilities.formatDate(new Date(), "GMT", "MM/dd/yyyy");
+  var todayMonth = Utilities.formatDate(new Date(), "GMT", "yyyy-MM");
+  var hour = Utilities.formatDate(new Date(), "GMT", "H");
+  if (today > lastDailyDate && hour >= 1) {
+    dailySheet.insertRows(20);
+    dailySheet.getRange(20,1).setValue(today);
+    dailySheet.getRange(20,6).setNumberFormat("$0.00").setValue(dailyOpEx);
+    setTodaysData(dailyOpEx)
+  } else {
+    setTodaysData(dailyOpEx)
+  }
+  if (todayMonth > lastMonthlyDate && hour >= 1) {
+    monthlySheet.insertRows(20);
+    monthlySheet.getRange(20,1).setValue(todayMonth);
+    monthlySheet.getRange(20,6).setValue(controlSheet.getRange(3,2).getValue())
+    setMonthData()
+  } else {
+    setMonthData()
+  }
+}
+
+function setTodaysData(dailyOpEx) {
+  var lastDailyDate = Utilities.formatDate(new Date(dailySheet.getRange(20,1).getValue()), "GMT", "MM/dd/yyyy");
+  var rewardLastRow = rewardSheet.getLastRow();
+  var rewardDates = rewardSheet.getRange(8,2,rewardLastRow-7,1).getValues();
+  var rewardAmounts = rewardSheet.getRange(8,6,rewardLastRow-7,1).getValues();
+  var rewardDollarAmounts = rewardSheet.getRange(8,9,rewardLastRow-7,1).getValues();
+  var hashrates = rewardSheet.getRange(8,5,rewardLastRow-7,1).getValues();
+  var poolHashrates = rewardSheet.getRange(8,4,rewardLastRow-7,1).getValues();
+  var btcPrices = rewardSheet.getRange(8,10,rewardLastRow-7,1).getValues();
+  var rewardDatesLength = rewardDates.length;
+  var minedBTC = 0;
+  var minedDollars = 0;
+  var minedBlocks = 0;
+  var userHashArray = [];
+  var poolHashArray = [];
+  var priceArray = [];
+  const average = (array) => array.reduce((a, b) => a + b) / array.length;
+  var taxRate = controlSheet.getRange(4,2).getValue();
+  for (var i = 0; i < rewardDatesLength; i++) {
+    var dateValue = Utilities.formatDate(new Date(rewardDates[i]), "GMT", "MM/dd/yyyy");
+    if (lastDailyDate == dateValue) {
+      var minedBTC = minedBTC + +rewardAmounts[i];
+      var minedDollars = minedDollars + +rewardDollarAmounts[i];
+      var minedBlocks = minedBlocks + 1;
+      userHashArray.push(+hashrates[i]);
+      poolHashArray.push(+poolHashrates[i]);
+      priceArray.push(+btcPrices[i]);
+    }
+  }
+  if (minedBlocks > 0) {
+    var incomeTax = minedDollars * taxRate;
+    dailySheet.getRange(20,2).setValue(minedBlocks);
+    dailySheet.getRange(20,3).setValue(minedBTC);
+    if (minedDollars >= 1000) {
+      dailySheet.getRange(20,4).setNumberFormat("$0,000.00").setValue(minedDollars);
+    } else {
+      dailySheet.getRange(20,4).setNumberFormat("$0.00").setValue(minedDollars);
+    }
+    dailySheet.getRange(20,5).setNumberFormat("$0.00").setValue(incomeTax);
+    dailySheet.getRange(20,7).setNumberFormat("$0.00").setValue(minedDollars - incomeTax - dailyOpEx);
+    if (average(userHashArray) >= 1000) {
+      dailySheet.getRange(20,8).setNumberFormat("0,000.0").setValue(average(userHashArray));
+    } else {
+      dailySheet.getRange(20,8).setNumberFormat("0.0").setValue(average(userHashArray));
+    }
+    dailySheet.getRange(20,9).setNumberFormat("0,000").setValue(average(poolHashArray));
+    dailySheet.getRange(20,10).setNumberFormat("$0,000.00").setValue(average(priceArray));
+  }
+}
+
+function setNewDailyDates() {
+  var rewardLastRow = rewardSheet.getLastRow();
+  var rewardDates = rewardSheet.getRange(8,2,rewardLastRow-7,1).getValues();
+  var rewardDatesLength = rewardDates.length;
+  var datesArray = [];
+  for (var i = 0; i < rewardDatesLength; i++) {
+    var dateValue = Utilities.formatDate(new Date(rewardDates[i]), "GMT", "MM/dd/yyyy");
+    datesArray.push(dateValue);
+  }
+  var distDatesArray = Array.from(new Set(datesArray));
+  var distDatesArrayLength = distDatesArray.length;
+  for (var i = 0; i < distDatesArrayLength; i++) {
+    dailySheet.getRange(20+i,1).setValue(distDatesArray[i]); // set dates
+  }
+  var minedBTCValues = rewardSheet.getRange(8,2,rewardLastRow-7,9).getValues();
+  var minedBTCValuesLength = minedBTCValues.length;
+  var minedBTCValuesArray = [];
+  for (var i = 0; i < minedBTCValuesLength; i++) {
+    var cleanDate = Utilities.formatDate(new Date(minedBTCValues[i][0]), "GMT", "MM/dd/yyyy");
+    var ogDate = minedBTCValues[i][0];
+    var month = ogDate.getMonth();
+    var year = ogDate.getFullYear();
+    var daysInMonth = new Date(year, month + 1, 0).getDate();
+    minedBTCValuesArray.push(minedBTCValues[i].concat(cleanDate, daysInMonth));
+  }
+  var taxRate = controlSheet.getRange(4,2).getValue();
+  var opEx = controlSheet.getRange(3,2).getValue();
+  const average = (array) => array.reduce((a, b) => a + b) / array.length;
+  for (var i = 0; i < distDatesArrayLength; i++) {
+    var dailyDate = Utilities.formatDate(new Date(dailySheet.getRange(20 + i,1).getValue()), "GMT", "MM/dd/yyyy");
+    var minedBTCArray = [];
+    var minedDollarsArray = [];
+    var blocksMinedArray = [];
+    var hashrateArrary = [];
+    var poolHashArrary = [];
+    var btcPriceArray = [];
+    var opExArray = [];
+    for (var j = 0; j < minedBTCValuesLength; j++) {
+      var rewardDate = minedBTCValuesArray[j][9];
+      if (rewardDate == dailyDate) {
+        minedBTCArray.push(minedBTCValuesArray[j][4]);
+        minedDollarsArray.push(minedBTCValuesArray[j][7]);
+        blocksMinedArray.push(1);
+        hashrateArrary.push(minedBTCValuesArray[j][3]);
+        poolHashArrary.push(minedBTCValuesArray[j][2])
+        btcPriceArray.push(minedBTCValuesArray[j][8]);
+        opExArray.push(minedBTCValuesArray[j][10])
+      }
+    }
+    var dailyValue = minedDollarsArray.reduce((partialSum, a) => partialSum + a, 0);
+    var dailyTax = minedDollarsArray.reduce((partialSum, a) => partialSum + a, 0) * taxRate;
+    var dailyOpEx = opEx / average(opExArray);
+    dailySheet.getRange(20+i,2).setValue(blocksMinedArray.reduce((partialSum, a) => partialSum + a, 0));
+    dailySheet.getRange(20+i,3).setNumberFormat("0.00000000").setValue(minedBTCArray.reduce((partialSum, a) => partialSum + a, 0));
+    if (dailyValue >= 1000) {
+      dailySheet.getRange(20+i,4).setNumberFormat("$0,000.00").setValue(dailyValue);
+    } else {
+      dailySheet.getRange(20+i,4).setNumberFormat("$0.00").setValue(dailyValue);
+    }
+    dailySheet.getRange(20+i,4).setNumberFormat("$0.00").setValue(dailyValue);
+    dailySheet.getRange(20+i,5).setNumberFormat("$0.00").setValue(dailyTax);
+    dailySheet.getRange(20+i,6).setNumberFormat("$0.00").setValue(dailyOpEx);
+    dailySheet.getRange(20+i,7).setNumberFormat("$0.00").setValue(dailyValue - dailyTax - dailyOpEx);
+    if (average(hashrateArrary) >= 1000) {
+      dailySheet.getRange(20+i,8).setNumberFormat("0,000.0").setValue(average(hashrateArrary));
+    } else {
+      dailySheet.getRange(20+i,8).setNumberFormat("0.0").setValue(average(hashrateArrary));
+    }
+    dailySheet.getRange(20+i,8).setNumberFormat("0.0").setValue(average(hashrateArrary));
+    dailySheet.getRange(20+i,9).setNumberFormat("0,000").setValue(average(poolHashArrary));
+    dailySheet.getRange(20+i,10).setNumberFormat("$0,000.00").setValue(average(btcPriceArray));
+  }
+}
+
+function setMonthData() {
+  var lastMonthDate = Utilities.formatDate(new Date(monthlySheet.getRange(20,1).getValue()), "GMT", "yyyy-MM");
+  var rewardLastRow = rewardSheet.getLastRow();
+  var rewardDates = rewardSheet.getRange(8,2,rewardLastRow-7,1).getValues();
+  var rewardAmounts = rewardSheet.getRange(8,6,rewardLastRow-7,1).getValues();
+  var rewardDollarAmounts = rewardSheet.getRange(8,9,rewardLastRow-7,1).getValues();
+  var hashrates = rewardSheet.getRange(8,5,rewardLastRow-7,1).getValues();
+  var poolHashrates = rewardSheet.getRange(8,4,rewardLastRow-7,1).getValues();
+  var btcPrices = rewardSheet.getRange(8,10,rewardLastRow-7,1).getValues();
+  var rewardDatesLength = rewardDates.length;
+  var minedBTC = 0;
+  var minedDollars = 0;
+  var minedBlocks = 0;
+  var userHashArray = [];
+  var poolHashArray = [];
+  var priceArray = [];
+  const average = (array) => array.reduce((a, b) => a + b) / array.length;
+  var opEx = controlSheet.getRange(3,2).getValue();
+  var taxRate = controlSheet.getRange(4,2).getValue();
+  for (var i = 0; i < rewardDatesLength; i++) {
+    var dateValue = Utilities.formatDate(new Date(rewardDates[i]), "GMT", "yyyy-MM");
+    if (lastMonthDate == dateValue) {
+      var minedBTC = minedBTC + +rewardAmounts[i];
+      var minedDollars = minedDollars + +rewardDollarAmounts[i];
+      var minedBlocks = minedBlocks + 1;
+      userHashArray.push(+hashrates[i]);
+      poolHashArray.push(+poolHashrates[i]);
+      priceArray.push(+btcPrices[i]);
+    }
+  }
+  if (minedBlocks > 0) {
+    var incomeTax = minedDollars * taxRate;
+    monthlySheet.getRange(20,2).setValue(minedBlocks); // set number of blocks mined
+    monthlySheet.getRange(20,3).setValue(minedBTC); // set mined btc
+    monthlySheet.getRange(20,6).setValue(opEx); // set OpEx
+    if (minedDollars > 1000) {
+      monthlySheet.getRange(20,4).setNumberFormat("$0,000.00").setValue(minedDollars) // set mined USD value
+    } else {
+      monthlySheet.getRange(20,4).setNumberFormat("$0.00").setValue(minedDollars)
+    }
+    if (incomeTax >= 1000) {
+      monthlySheet.getRange(20,5).setNumberFormat("$0,000.00").setValue(incomeTax); // set income tax
+    } else {
+      monthlySheet.getRange(20,5).setNumberFormat("$0.00").setValue(incomeTax);
+    }
+    if (minedDollars - incomeTax - opEx >= 1000) {
+      monthlySheet.getRange(20,7).setNumberFormat("$0,000.00").setValue(minedDollars - incomeTax - opEx); // set net income
+    } else {
+      monthlySheet.getRange(20,7).setNumberFormat("$0.00").setValue(minedDollars - incomeTax - opEx);
+    }
+    if (average(userHashArray) >= 1000) {
+      monthlySheet.getRange(20,8).setNumberFormat("0,000.0").setValue(average(userHashArray)); // set average hashrate
+    } else {
+      monthlySheet.getRange(20,8).setNumberFormat("0.0").setValue(average(userHashArray));
+    }
+    monthlySheet.getRange(20,9).setNumberFormat("0,000").setValue(average(poolHashArray)); // set pool hash
+    monthlySheet.getRange(20,10).setNumberFormat("$0,000.00").setValue(average(priceArray)); // set average BTC price
+  }
+
+}
+
+
+function setNewMonthlyDates() {
+  var rewardLastRow = rewardSheet.getLastRow();
+  var rewardDates = rewardSheet.getRange(8,2,rewardLastRow-7,1).getValues();
+  var rewardDatesLength = rewardDates.length;
+  var monthArray = [];
+  for (var i = 0; i < rewardDatesLength; i++) {
+    var monthValue = Utilities.formatDate(new Date(rewardDates[i]), "GMT", "yyyy-MM");
+    monthArray.push(monthValue);
+  }
+  var distMonthsArray = Array.from(new Set(monthArray));
+  var distMonthsArrayLength = distMonthsArray.length;
+  for (var i = 0; i < distMonthsArrayLength; i++) {
+    monthlySheet.getRange(20+i,1).setValue(distMonthsArray[i]); // set months
+  }
+  var minedBTCValues = rewardSheet.getRange(8,2,rewardLastRow-7,9).getValues();
+  var minedBTCValuesLength = minedBTCValues.length;
+  var minedBTCValuesArray = [];
+  for (var i = 0; i < minedBTCValuesLength; i++) {
+    var cleanDate = Utilities.formatDate(new Date(minedBTCValues[i][0]), "GMT", "yyyy-MM");
+    minedBTCValuesArray.push(minedBTCValues[i].concat(cleanDate));
+  }
+  var taxRate = controlSheet.getRange(4,2).getValue();
+  var opEx = controlSheet.getRange(3,2).getValue();
+  const average = (array) => array.reduce((a, b) => a + b) / array.length;
+
+  for (var i = 0; i < distMonthsArrayLength; i++) {
+    var dailyDate = Utilities.formatDate(new Date(monthlySheet.getRange(20 + i,1).getValue()), "GMT", "yyyy-MM");
+    var minedBTCArray = [];
+    var minedDollarsArray = [];
+    var blocksMinedArray = [];
+    var hashrateArrary = [];
+    var poolHashArrary = [];
+    var btcPriceArray = [];
+    var opExArray = [];
+    for (var j = 0; j < minedBTCValuesLength; j++) {
+      var rewardDate = minedBTCValuesArray[j][9];
+      if (rewardDate == dailyDate) {
+        minedBTCArray.push(minedBTCValuesArray[j][4]);
+        minedDollarsArray.push(minedBTCValuesArray[j][7]);
+        blocksMinedArray.push(1);
+        hashrateArrary.push(minedBTCValuesArray[j][3]);
+        poolHashArrary.push(minedBTCValuesArray[j][2])
+        btcPriceArray.push(minedBTCValuesArray[j][8]);
+        opExArray.push(minedBTCValuesArray[j][10])
+      }
+    }
+    var dailyValue = minedDollarsArray.reduce((partialSum, a) => partialSum + a, 0);
+    var dailyTax = minedDollarsArray.reduce((partialSum, a) => partialSum + a, 0) * taxRate;
+    monthlySheet.getRange(20+i,2).setValue(blocksMinedArray.reduce((partialSum, a) => partialSum + a, 0));
+    monthlySheet.getRange(20+i,3).setNumberFormat("0.00000000").setValue(minedBTCArray.reduce((partialSum, a) => partialSum + a, 0));
+    if (dailyValue >= 1000) {
+      monthlySheet.getRange(20+i,4).setNumberFormat("$0,000.00").setValue(dailyValue)
+    } else {
+      monthlySheet.getRange(20+i,4).setNumberFormat("$0.00").setValue(dailyValue)
+    }
+    if (dailyTax >= 1000) {
+      monthlySheet.getRange(20+i,5).setNumberFormat("$0,000.00").setValue(dailyTax);
+    } else {
+      monthlySheet.getRange(20+i,5).setNumberFormat("$0.00").setValue(dailyTax);
+    }
+    if (opEx >= 1000) {
+      monthlySheet.getRange(20+i,6).setNumberFormat("$0,000.00").setValue(opEx);
+    } else {
+      monthlySheet.getRange(20+i,6).setNumberFormat("$0.00").setValue(opEx);
+    }
+    if (dailyValue - dailyTax - opEx >= 1000) {
+      monthlySheet.getRange(20+i,7).setNumberFormat("$0,000.00").setValue(dailyValue - dailyTax - opEx);
+    } else {
+      monthlySheet.getRange(20+i,7).setNumberFormat("$0.00").setValue(dailyValue - dailyTax - opEx);
+    }
+    if (average(hashrateArrary) >= 1000) {
+      monthlySheet.getRange(20+i,8).setNumberFormat("0,000.0").setValue(average(hashrateArrary));
+    } else {
+      monthlySheet.getRange(20+i,8).setNumberFormat("0.0").setValue(average(hashrateArrary));
+    }
+    monthlySheet.getRange(20+i,9).setNumberFormat("0,000").setValue(average(poolHashArrary));
+    monthlySheet.getRange(20+i,10).setNumberFormat("$0,000.00").setValue(average(btcPriceArray));
   }
 }
