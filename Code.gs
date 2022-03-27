@@ -11,7 +11,7 @@ function onOpen() {
   ui.createMenu('Control Board')
       .addItem('Refresh Slush Data', 'menuItem1')
       .addToUi();
-  rewardSheet.getRange(7,1).activate();
+  rewardSheet.getRange(7,1).activate(); // set cursor
 }
 function menuItem1() {
   getBlockData();
@@ -44,7 +44,7 @@ function getBlockData() {
     var price = [[tickerJson.price]];
     var cbDate = [[tickerJson.time]].toString(); // to parse coinbase date
     var cbDateParsed = new Date(cbDate.substring(0, 4), cbDate.substring(5, 7) - 1, cbDate.substring(8, 10), cbDate.substring(11, 13), cbDate.substring(14, 16), cbDate.substring(17, 19));
-    var cbFormattedDate = Utilities.formatDate(cbDateParsed, "GMT-05:00", "MM/dd/yyyy HH:mm:ss");
+    var cbFormattedDate = Utilities.formatDate(cbDateParsed, "GMT-04:00", "MM/dd/yyyy HH:mm:ss");
 
     Utilities.sleep(5000); //wait 5 seconds before next Slush API call
     var slushAccountURL = 'https://slushpool.com/accounts/profile/json/btc'; // request active workers and 24h avg hashrate
@@ -80,7 +80,7 @@ function refreshSlushy(blockJson, blockArray, slushToken) {
     var price = [[tickerJson.price]];
     var cbDate = [[tickerJson.time]].toString(); // to parse coinbase date
     var cbDateParsed = new Date(cbDate.substring(0, 4), cbDate.substring(5, 7) - 1, cbDate.substring(8, 10), cbDate.substring(11, 13), cbDate.substring(14, 16), cbDate.substring(17, 19));
-    var cbFormattedDate = Utilities.formatDate(cbDateParsed, "GMT-05:00", "MM/dd/yyyy HH:mm:ss");
+    var cbFormattedDate = Utilities.formatDate(cbDateParsed, "GMT-04:00", "MM/dd/yyyy HH:mm:ss");
 
     Utilities.sleep(5000); //wait 5 seconds before next Slush API call
     var slushAccountURL = 'https://slushpool.com/accounts/profile/json/btc'; // request active workers and 24h avg hashrate
@@ -104,6 +104,7 @@ function refreshSlushy(blockJson, blockArray, slushToken) {
 function refreshBlockState(blockJson, blockArray) {
   var lastRow = rewardSheet.getLastRow();
   var stateRangeValues = rewardSheet.getRange(8,7,lastRow - 7,1).getValues();
+  var rewardValues = rewardSheet.getRange(8,6,lastRow - 7,1).getValues();
   var stateRangeValuesLength = stateRangeValues.length;
   var firstArrayBlock =  blockArray[0];
   for (var i = 0; i < stateRangeValuesLength; i++) {
