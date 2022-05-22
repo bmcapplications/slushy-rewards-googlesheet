@@ -49,9 +49,7 @@ function getBlockData() {
     var tickerResponse = UrlFetchApp.fetch(coinbaseURL);
     var tickerJson = JSON.parse(tickerResponse.getContentText());
     var price = [[tickerJson.price]];
-    var cbDate = [[tickerJson.time]].toString(); // to parse coinbase date
-    var cbDateParsed = new Date(cbDate.substring(0, 4), cbDate.substring(5, 7) - 1, cbDate.substring(8, 10), cbDate.substring(11, 13), cbDate.substring(14, 16), cbDate.substring(17, 19));
-    var cbFormattedDate = Utilities.formatDate(cbDateParsed, "GMT-04:00", "MM/dd/yyyy HH:mm:ss");
+    var cbFormattedDate = Utilities.formatDate(new Date([[tickerJson.time]]), "GMT", "MM/dd/yyyy HH:mm:ss");
 
     Utilities.sleep(5000); //wait 5 seconds before next Slush API call
     var slushAccountURL = 'https://slushpool.com/accounts/profile/json/btc'; // request active workers and 24h avg hashrate
@@ -85,9 +83,7 @@ function refreshSlushy(blockJson, blockArray, slushToken) {
     var tickerResponse = UrlFetchApp.fetch(coinbaseURL);
     var tickerJson = JSON.parse(tickerResponse.getContentText());
     var price = [[tickerJson.price]];
-    var cbDate = [[tickerJson.time]].toString(); // to parse coinbase date
-    var cbDateParsed = new Date(cbDate.substring(0, 4), cbDate.substring(5, 7) - 1, cbDate.substring(8, 10), cbDate.substring(11, 13), cbDate.substring(14, 16), cbDate.substring(17, 19));
-    var cbFormattedDate = Utilities.formatDate(cbDateParsed, "GMT-04:00", "MM/dd/yyyy HH:mm:ss");
+    var cbFormattedDate = Utilities.formatDate(new Date([[tickerJson.time]]), "GMT", "MM/dd/yyyy HH:mm:ss");
 
     Utilities.sleep(5000); //wait 5 seconds before next Slush API call
     var slushAccountURL = 'https://slushpool.com/accounts/profile/json/btc'; // request active workers and 24h avg hashrate
