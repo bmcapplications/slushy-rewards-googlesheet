@@ -326,7 +326,7 @@ function checkLastDate(dailyOpEx) {
   var today = Utilities.formatDate(new Date(), "GMT", "MM/dd/yyyy");
   var todayMonth = Utilities.formatDate(new Date(), "GMT", "yyyy-MM");
   var hour = Utilities.formatDate(new Date(), "GMT", "H");
-  if (today > lastDailyDate && hour >= 1) {
+  if (new Date(today) > new Date(lastDailyDate) && hour >= 1) {
     dailySheet.insertRows(20);
     dailySheet.getRange(20,1).setValue(today);
     dailySheet.getRange(20,6).setNumberFormat("$0.00").setValue(dailyOpEx);
